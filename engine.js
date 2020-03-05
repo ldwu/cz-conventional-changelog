@@ -6,6 +6,11 @@ var longest = require('longest');
 var rightPad = require('right-pad');
 var chalk = require('chalk');
 
+var _ = require('lodash');
+var fuzzy = require('fuzzy');
+var inquirer = require('inquirer');
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+
 var filter = function(array) {
   return array.filter(function(x) {
     return x;
@@ -14,7 +19,7 @@ var filter = function(array) {
 
 var headerLength = function(answers) {
   return (
-    answers.type.length + 2 + (answers.scope ? answers.scope.length + 2 : 0)
+    choice_type.length + 2 + (answers.scope ? answers.scope.length + 2 : 0)
   );
 };
 
@@ -48,6 +53,24 @@ module.exports = function(options) {
     };
   });
 
+  function searchStates(answers, input) {
+    input = input || '';
+    return new Promise(function(resolve,reject) {
+      var fuzzyResult = fuzzy.filter(input||"a", _.map(choices,(value)=>value.name));
+      if (true) {
+        resolve(
+          fuzzyResult.map(function(el) {
+            return el.original;
+          })
+        );
+      }
+      else{
+        reject("1");
+      }
+
+    });
+  }
+
   return {
     // When a user runs `git cz`, prompter will
     // be executed. We pass you cz, which currently
@@ -68,13 +91,12 @@ module.exports = function(options) {
       // See inquirer.js docs for specifics.
       // You can also opt to use another input
       // collection library if you prefer.
-      cz.prompt([
+      inquirer.prompt([
         {
-          type: 'list',
+          type: 'autocomplete',
           name: 'type',
           message: "Select the type of change that you're committing:",
-          choices: choices,
-          default: options.defaultType
+          source: searchStates
         },
         {
           type: 'input',
@@ -124,70 +146,70 @@ module.exports = function(options) {
           }
         },
         {
-          type: 'input',
+          type: 'editor',
           name: 'body',
           message:
             'Provide a longer description of the change: (press enter to skip)\n',
           default: options.defaultBody
-        },
-        {
-          type: 'confirm',
-          name: 'isBreaking',
-          message: 'Are there any breaking changes?',
-          default: false
-        },
-        {
-          type: 'input',
-          name: 'breakingBody',
-          default: '-',
-          message:
-            'A BREAKING CHANGE commit requires a body. Please enter a longer description of the commit itself:\n',
-          when: function(answers) {
-            return answers.isBreaking && !answers.body;
-          },
-          validate: function(breakingBody, answers) {
-            return (
-              breakingBody.trim().length > 0 ||
-              'Body is required for BREAKING CHANGE'
-            );
-          }
-        },
-        {
-          type: 'input',
-          name: 'breaking',
-          message: 'Describe the breaking changes:\n',
-          when: function(answers) {
-            return answers.isBreaking;
-          }
-        },
-
-        {
-          type: 'confirm',
-          name: 'isIssueAffected',
-          message: 'Does this change affect any open issues?',
-          default: options.defaultIssues ? true : false
-        },
-        {
-          type: 'input',
-          name: 'issuesBody',
-          default: '-',
-          message:
-            'If issues are closed, the commit requires a body. Please enter a longer description of the commit itself:\n',
-          when: function(answers) {
-            return (
-              answers.isIssueAffected && !answers.body && !answers.breakingBody
-            );
-          }
-        },
-        {
-          type: 'input',
-          name: 'issues',
-          message: 'Add issue references (e.g. "fix #123", "re #123".):\n',
-          when: function(answers) {
-            return answers.isIssueAffected;
-          },
-          default: options.defaultIssues ? options.defaultIssues : undefined
         }
+        // {
+        //   type: 'confirm',
+        //   name: 'isBreaking',
+        //   message: 'Are there any breaking changes?',
+        //   default: false
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'breakingBody',
+        //   default: '-',
+        //   message:
+        //     'A BREAKING CHANGE commit requires a body. Please enter a longer description of the commit itself:\n',
+        //   when: function(answers) {
+        //     return answers.isBreaking && !answers.body;
+        //   },
+        //   validate: function(breakingBody, answers) {
+        //     return (
+        //       breakingBody.trim().length > 0 ||
+        //       'Body is required for BREAKING CHANGE'
+        //     );
+        //   }
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'breaking',
+        //   message: 'Describe the breaking changes:\n',
+        //   when: function(answers) {
+        //     return answers.isBreaking;
+        //   }
+        // },
+        //
+        // {
+        //   type: 'confirm',
+        //   name: 'isIssueAffected',
+        //   message: 'Does this change affect any open issues?',
+        //   default: options.defaultIssues ? true : false
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'issuesBody',
+        //   default: '-',
+        //   message:
+        //     'If issues are closed, the commit requires a body. Please enter a longer description of the commit itself:\n',
+        //   when: function(answers) {
+        //     return (
+        //       answers.isIssueAffected && !answers.body && !answers.breakingBody
+        //     );
+        //   }
+        // },
+        // {
+        //   type: 'input',
+        //   name: 'issues',
+        //   message: 'Add issue references (e.g. "fix #123", "re #123".):\n',
+        //   when: function(answers) {
+        //     return answers.isIssueAffected;
+        //   },
+        //   default: options.defaultIssues ? options.defaultIssues : undefined
+        // }
       ]).then(function(answers) {
         var wrapOptions = {
           trim: true,
@@ -196,6 +218,13 @@ module.exports = function(options) {
           indent: '',
           width: options.maxLineWidth
         };
+        var choice_type = "";
+        _.map(choices,(value,key)=>{
+          if (value.name === answers.type) {
+          choice_type = value.value;
+        }
+      });
+        answers.type = choice_type;
 
         // parentheses are only needed when a scope is present
         var scope = answers.scope ? '(' + answers.scope + ')' : '';

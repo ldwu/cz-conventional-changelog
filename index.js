@@ -5,6 +5,21 @@ var conventionalCommitTypes = require('conventional-commit-types');
 var configLoader = require('commitizen').configLoader;
 
 var config = configLoader.load();
+
+// 移除commit type
+var commitTypes = conventionalCommitTypes.types;
+(function () {
+  var delTypes = ['build', 'ci', 'revert'];
+
+  for (var i=0; i < delTypes.length; i++){
+    try{
+      delete commitTypes[delTypes[i]];
+    }
+    catch (err){}
+  }
+
+})();
+
 var options = {
   types: conventionalCommitTypes.types,
   defaultType: process.env.CZ_TYPE || config.defaultType,
