@@ -18,6 +18,13 @@ var filter = function(array) {
 };
 
 var headerLength = function(answers) {
+  var choice_type = "";
+  _.map(choices,(value,key)=>{
+      if (value.name === answers.type) {
+        choice_type = value.value;
+    }
+  });
+
   return (
     choice_type.length + 2 + (answers.scope ? answers.scope.length + 2 : 0)
   );
