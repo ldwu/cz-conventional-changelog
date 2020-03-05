@@ -9,7 +9,7 @@ var config = configLoader.load();
 // 移除commit type
 var commitTypes = conventionalCommitTypes.types;
 (function () {
-  var delTypes = ['build', 'ci', 'revert'];
+  var delTypes = ['build', 'ci', 'revert', 'perf'];
 
   for (var i=0; i < delTypes.length; i++){
     try{
@@ -17,7 +17,10 @@ var commitTypes = conventionalCommitTypes.types;
     }
     catch (err){}
   }
-
+  commitTypes['hotfix'] = {
+    "description": "App bug fix",
+    "title": "Hotfix"
+  }
 })();
 
 var options = {

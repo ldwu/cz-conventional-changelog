@@ -1,6 +1,6 @@
 {
   "name": "ld-conventional-changelog",
-  "version": "1.0.8",
+  "version": "1.0.13",
   "description": "Commitizen adapter following the conventional-changelog format.",
   "main": "index.js",
   "scripts": {

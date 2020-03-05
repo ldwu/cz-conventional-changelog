@@ -17,16 +17,17 @@ var filter = function(array) {
   });
 };
 
-var headerLength = function(answers) {
-  var choice_type = "";
-  _.map(choices,(value,key)=>{
-      if (value.name === answers.type) {
-        choice_type = value.value;
-    }
-  });
 
+var headerLength = function(answers) {
+  var type = '';
+  if (answers.type.length > 0){
+    try{
+      type = answers.type.split(':')[0]
+    }
+    catch (err){}
+  }
   return (
-    choice_type.length + 2 + (answers.scope ? answers.scope.length + 2 : 0)
+    type.length + 2 + (answers.scope ? answers.scope.length + 2 : 0)
   );
 };
 
